@@ -151,7 +151,11 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                 if (filter == null) {
                     filter = cast(childFilter, call.type);
                 } else {
-                    filter.addChild(childFilter);
+                    try {
+                        filter.addChild(childFilter);
+                    } catch (Exception ex) {
+                        return new UnsupportedTupleFilter(FilterOperatorEnum.UNSUPPORTED);
+                    }
                 }
             }
 
@@ -227,7 +231,8 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         @Override
         public TupleFilter visitInputRef(RexInputRef inputRef) {
             TblColRef column = inputRowType.getColumnByIndex(inputRef.getIndex());
-            context.allColumns.add(column);
+            if (!column.isInnerColumn())
+                context.allColumns.add(column);
             ColumnTupleFilter filter = new ColumnTupleFilter(column);
             return filter;
         }
